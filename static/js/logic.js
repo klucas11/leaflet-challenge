@@ -8,12 +8,29 @@ d3.json(queryQuakesUrl, function (data) {
     createFeatures(data.features);
 });
 
+// Increse marker size
 function markerSize(magnitude) {
     return magnitude * 3;
 };
 
-function createFeatures(earthquakeData) {
+// Give markers color based on magnitude
+function Color(magnitude) {
+    if (magnitude > 5) {
+        return 'maroon'
+    } else if (magnitude > 4) {
+        return 'red'
+    } else if (magnitude > 3) {
+        return 'darkorange'
+    } else if (magnitude > 2) {
+        return 'orange'
+    } else if (magnitude > 1) {
+        return 'yellow'
+    } else {
+        return 'palegreen'
+    }
+};
 
+function createFeatures(earthquakeData) {
 
     // Define a function we want to run once for each feature in the features array
     // Give each feature a popup describing the place and time of the earthquake
@@ -22,12 +39,25 @@ function createFeatures(earthquakeData) {
             "</h3><hr><p>" + new Date(feature.properties.time) + "</p>");
     }
 
+    // L.geoJson(earthquakeData, { style: style }).addTo(map);
+
     // Create a GeoJSON layer containing the features array on the earthquakeData object
     // Run the onEachFeature function once for each piece of data in the array
     var earthquakes = L.geoJSON(earthquakeData, {
         pointToLayer: function (feature, latlng) {
             return L.circleMarker(latlng, { radius: markerSize(feature.properties.mag) });
         },
+
+        style: function (feature) {
+            return {
+                fillColor: Color(feature.properties.mag),
+                fillOpacity: 0.7,
+                weight: 0.1,
+                color: 'black'
+
+            }
+        },
+
         onEachFeature: onEachFeature
     });
 
@@ -45,9 +75,18 @@ function createMap(earthquakes) {
         accessToken: API_KEY
     });
 
+    var satellite = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
+        attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
+        maxZoom: 18,
+        id: "mapbox.satellite",
+        accessToken: API_KEY
+    });
+
+
     // Define a baseMaps object to hold our base layers
     var baseMaps = {
         "Gray Scale": grayscale,
+        "Satellite": satellite
     };
 
     // Create overlay object to hold our overlay layer
